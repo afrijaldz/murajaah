@@ -6,14 +6,30 @@ const TRANSLATION_EDITION = 'id.indonesian'
 
 async function fetchAllPages(endpoint) {
   const allAyahs = []
+  let surahMeta = null
   let offset = 0
   while (true) {
     const url = `${API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}offset=${offset}`
     const res = await fetch(url)
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const json = await res.json()
-    const ayahs = json.data.ayahs
+    const data = json.data
+
+    // Surah endpoint has metadata at top level, not per ayah
+    if (!surahMeta && data.number && data.name && !data.ayahs?.[0]?.surah) {
+      surahMeta = { number: data.number, name: data.name, englishName: data.englishName }
+    }
+
+    const ayahs = data.ayahs
     if (!ayahs || ayahs.length === 0) break
+
+    // Inject surah metadata into each ayah if not present
+    if (surahMeta) {
+      for (const ayah of ayahs) {
+        if (!ayah.surah) ayah.surah = surahMeta
+      }
+    }
+
     allAyahs.push(...ayahs)
     if (ayahs.length < 128) break
     offset += ayahs.length
