@@ -75,6 +75,12 @@ function retry() {
         @restart="restart"
         @change-setting="backToConfig"
       />
+
+      <footer class="text-center mt-8 pb-4">
+        <a href="https://github.com/afrijaldz/murajaah" target="_blank" rel="noopener" class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+          GitHub
+        </a>
+      </footer>
     </div>
   </div>
 </template>
