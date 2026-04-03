@@ -121,24 +121,6 @@ function submit() {
       </div>
     </div>
 
-    <!-- Hint Toggle (Quiz mode only) -->
-    <div v-if="form.mode === 'quiz'" class="flex items-center justify-between">
-      <div>
-        <label class="text-sm font-medium">Tampilkan Hint</label>
-        <p class="text-xs text-[var(--color-text-muted)]">3 kata awal ayat sebagai petunjuk</p>
-      </div>
-      <button
-        @click="form.showHint = !form.showHint"
-        class="relative w-11 h-6 rounded-full transition-colors"
-        :class="form.showHint ? 'bg-[var(--color-primary)]' : 'bg-gray-300'"
-      >
-        <span
-          class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"
-          :class="{ 'translate-x-5': form.showHint }"
-        ></span>
-      </button>
-    </div>
-
     <!-- Start Button -->
     <button
       @click="submit"

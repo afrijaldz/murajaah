@@ -72,8 +72,21 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           :visible="session.showDetail.value"
         />
 
+        <!-- Hint toggle (Quiz mode only) -->
+        <div v-if="config.mode === 'quiz'" class="flex items-center justify-center gap-2 mt-4">
+          <button
+            @click="config.showHint = !config.showHint"
+            class="text-xs px-3 py-1.5 rounded-full border transition-colors"
+            :class="config.showHint
+              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
+              : 'text-[var(--color-text-muted)] border-[var(--color-border)]'"
+          >
+            {{ config.showHint ? 'Hint: ON' : 'Hint: OFF' }}
+          </button>
+        </div>
+
         <!-- Action buttons -->
-        <div class="flex items-center justify-center gap-3 mt-6">
+        <div class="flex items-center justify-center gap-3 mt-4">
           <button
             v-if="config.mode === 'quiz' && !session.showDetail.value"
             @click="session.show()"
