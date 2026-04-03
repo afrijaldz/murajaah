@@ -94,6 +94,11 @@ function submit() {
           Review
         </button>
       </div>
+      <p class="text-xs text-[var(--color-text-muted)] mt-2">
+        {{ form.mode === 'quiz'
+          ? 'Hanya tampilkan nama surat dan nomor ayat, uji hafalanmu lalu lihat jawabannya.'
+          : 'Tampilkan ayat lengkap beserta terjemahan untuk review bacaan.' }}
+      </p>
     </div>
 
     <!-- Order -->
@@ -119,6 +124,11 @@ function submit() {
           Acak
         </button>
       </div>
+      <p class="text-xs text-[var(--color-text-muted)] mt-2">
+        {{ form.order === 'sequential'
+          ? 'Ayat ditampilkan sesuai urutan dalam mushaf.'
+          : 'Ayat diacak untuk menguji hafalan secara lebih menyeluruh.' }}
+      </p>
     </div>
 
     <!-- Start Button -->
