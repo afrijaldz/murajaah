@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import SurahSearch from './SurahSearch.vue'
 
 const props = defineProps({
@@ -13,14 +13,73 @@ const form = reactive({
   mode: props.initialConfig.mode,
   order: props.initialConfig.order,
   showHint: props.initialConfig.showHint,
+  ayahFrom: props.initialConfig.ayahFrom || null,
+  ayahTo: props.initialConfig.ayahTo || null,
 })
+
+const totalAyahs = ref(0)
+const useRange = ref(!!(props.initialConfig.ayahFrom || props.initialConfig.ayahTo))
+const rangeError = ref('')
 
 function onScopeTypeChange(type) {
   form.scopeType = type
   form.scopeValue = type === 'surah' ? 1 : 1
+  resetRange()
+}
+
+function onSurahInfo(surah) {
+  totalAyahs.value = surah.numberOfAyahs
+  validateRange()
+}
+
+function resetRange() {
+  useRange.value = false
+  form.ayahFrom = null
+  form.ayahTo = null
+  rangeError.value = ''
+}
+
+function toggleRange() {
+  useRange.value = !useRange.value
+  if (!useRange.value) {
+    form.ayahFrom = null
+    form.ayahTo = null
+    rangeError.value = ''
+  } else {
+    form.ayahFrom = 1
+    form.ayahTo = totalAyahs.value || 1
+  }
+}
+
+function validateRange() {
+  rangeError.value = ''
+  if (!useRange.value) return true
+
+  const from = Number(form.ayahFrom)
+  const to = Number(form.ayahTo)
+  const max = totalAyahs.value
+
+  if (!from || !to) {
+    rangeError.value = 'Isi kedua field ayat.'
+    return false
+  }
+  if (from < 1 || to < 1) {
+    rangeError.value = 'Nomor ayat minimal 1.'
+    return false
+  }
+  if (max && (from > max || to > max)) {
+    rangeError.value = `Surat ini hanya memiliki ${max} ayat.`
+    return false
+  }
+  if (from > to) {
+    rangeError.value = 'Ayat awal harus lebih kecil atau sama dengan ayat akhir.'
+    return false
+  }
+  return true
 }
 
 function submit() {
+  if (!validateRange()) return
   emit('start', { ...form })
 }
 </script>
@@ -61,6 +120,7 @@ function submit() {
       <SurahSearch
         v-if="form.scopeType === 'surah'"
         v-model="form.scopeValue"
+        @surah-info="onSurahInfo"
       />
       <select
         v-else
@@ -69,6 +129,55 @@ function submit() {
       >
         <option v-for="n in 30" :key="n" :value="n">Juz {{ n }}</option>
       </select>
+    </div>
+
+    <!-- Ayah Range (Surah only) -->
+    <div v-if="form.scopeType === 'surah'">
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="text-sm font-medium">Rentang Ayat</label>
+          <p class="text-xs text-[var(--color-text-muted)]">
+            {{ useRange ? `Ayat ${form.ayahFrom || '?'} - ${form.ayahTo || '?'} dari ${totalAyahs}` : 'Semua ayat dalam surat' }}
+          </p>
+        </div>
+        <button
+          @click="toggleRange"
+          class="relative w-11 h-6 rounded-full transition-colors"
+          :class="useRange ? 'bg-[var(--color-primary)]' : 'bg-gray-300'"
+        >
+          <span
+            class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform"
+            :class="{ 'translate-x-5': useRange }"
+          ></span>
+        </button>
+      </div>
+      <div v-if="useRange" class="flex gap-2 mt-3">
+        <div class="flex-1">
+          <label class="block text-xs text-[var(--color-text-muted)] mb-1">Dari ayat</label>
+          <input
+            v-model.number="form.ayahFrom"
+            @input="validateRange"
+            type="number"
+            min="1"
+            :max="totalAyahs"
+            class="w-full px-3 py-2 border rounded-lg bg-[var(--color-surface)] text-sm"
+            :class="rangeError ? 'border-red-400' : 'border-[var(--color-border)]'"
+          />
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs text-[var(--color-text-muted)] mb-1">Sampai ayat</label>
+          <input
+            v-model.number="form.ayahTo"
+            @input="validateRange"
+            type="number"
+            min="1"
+            :max="totalAyahs"
+            class="w-full px-3 py-2 border rounded-lg bg-[var(--color-surface)] text-sm"
+            :class="rangeError ? 'border-red-400' : 'border-[var(--color-border)]'"
+          />
+        </div>
+      </div>
+      <p v-if="rangeError" class="text-xs text-red-500 mt-1">{{ rangeError }}</p>
     </div>
 
     <!-- Mode -->

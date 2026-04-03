@@ -5,7 +5,7 @@ import { useQuranApi } from '../composables/useQuranApi.js'
 const props = defineProps({
   modelValue: { type: Number, default: 1 },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'surahInfo'])
 
 const { fetchSurahList } = useQuranApi()
 const surahList = ref([])
@@ -29,6 +29,7 @@ const filtered = computed(() => {
 
 function select(surah) {
   emit('update:modelValue', surah.number)
+  emit('surahInfo', surah)
   search.value = ''
   isOpen.value = false
 }
@@ -45,7 +46,11 @@ function closeDropdown() {
 
 onMounted(async () => {
   const list = await fetchSurahList()
-  if (list) surahList.value = list
+  if (list) {
+    surahList.value = list
+    const initial = list.find(s => s.number === props.modelValue)
+    if (initial) emit('surahInfo', initial)
+  }
 })
 </script>
 

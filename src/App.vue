@@ -13,6 +13,8 @@ const config = reactive({
   mode: 'quiz',
   order: 'sequential',
   showHint: false,
+  ayahFrom: null,
+  ayahTo: null,
 })
 
 const { fetchAyahs, loading, error } = useQuranApi()
@@ -22,8 +24,11 @@ async function startSession(userConfig) {
   Object.assign(config, userConfig)
   appState.value = 'loading'
 
-  const ayahs = await fetchAyahs(config.scopeType, config.scopeValue)
-  if (ayahs) {
+  let ayahs = await fetchAyahs(config.scopeType, config.scopeValue)
+  if (ayahs && config.ayahFrom && config.ayahTo) {
+    ayahs = ayahs.filter(a => a.numberInSurah >= config.ayahFrom && a.numberInSurah <= config.ayahTo)
+  }
+  if (ayahs && ayahs.length > 0) {
     session.init(ayahs, config)
     appState.value = 'session'
   } else {
