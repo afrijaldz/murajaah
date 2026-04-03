@@ -1,7 +1,7 @@
 ---
 title: "feat: Murojaah Quran Review App"
 type: feat
-status: active
+status: completed
 date: 2026-04-03
 ---
 
@@ -139,69 +139,69 @@ const isComplete = ref(false)
 
 ### Phase 1: Project Setup + Config UI
 
-- [ ] Scaffold Vite + Vue 3 project (`npm create vite@latest murajaah -- --template vue`)
-- [ ] Install Tailwind CSS v4 (`npm install tailwindcss @tailwindcss/vite`)
-- [ ] Configure `vite.config.js` with Vue + Tailwind plugins
-- [ ] Setup `src/style.css` with Tailwind import, Amiri font, `@theme` config
-- [ ] Build `ConfigPanel.vue` — scope selector (Juz/Surat radio), mode selector, order selector, hint toggle
-- [ ] Build `SurahSearch.vue` — searchable dropdown with 114 surahs (filter by name as user types). Surah list fetched from `/v1/surah` at app init and cached.
-- [ ] Wire up `App.vue` — show ConfigPanel, handle "Start" button. Preserve config selections when returning via "Ganti Setting".
+- [x] Scaffold Vite + Vue 3 project (`npm create vite@latest murajaah -- --template vue`)
+- [x] Install Tailwind CSS v4 (`npm install tailwindcss @tailwindcss/vite`)
+- [x] Configure `vite.config.js` with Vue + Tailwind plugins
+- [x] Setup `src/style.css` with Tailwind import, Amiri font, `@theme` config
+- [x] Build `ConfigPanel.vue` — scope selector (Juz/Surat radio), mode selector, order selector, hint toggle
+- [x] Build `SurahSearch.vue` — searchable dropdown with 114 surahs (filter by name as user types). Surah list fetched from `/v1/surah` at app init and cached.
+- [x] Wire up `App.vue` — show ConfigPanel, handle "Start" button. Preserve config selections when returning via "Ganti Setting".
 
 **Files:** `vite.config.js`, `src/style.css`, `src/App.vue`, `src/components/ConfigPanel.vue`, `src/components/SurahSearch.vue`
 
 ### Phase 2: API Integration
 
-- [ ] Build `useQuranApi.js` composable:
+- [x] Build `useQuranApi.js` composable:
   - `fetchSurah(number)` — fetch Arabic+audio + Indonesian translation, merge by `number`
   - `fetchJuz(number)` — same but with pagination loop (offset-based)
   - Return merged ayah array + loading + error state
-- [ ] Build `bismillah.js` — `stripBismillah(text)` utility
-- [ ] Add loading state UI (spinner + "Memuat ayat...")
-- [ ] Add error state UI (pesan error + tombol "Coba Lagi")
+- [x] Build `bismillah.js` — `stripBismillah(text)` utility
+- [x] Add loading state UI (spinner + "Memuat ayat...")
+- [x] Add error state UI (pesan error + tombol "Coba Lagi")
 
 **Files:** `src/composables/useQuranApi.js`, `src/utils/bismillah.js`
 
 ### Phase 3: Murojaah Session
 
-- [ ] Build `useSession.js` composable:
+- [x] Build `useSession.js` composable:
   - Init with ayah array + config
   - Fisher-Yates shuffle for random mode
   - `next()` — advance to next ayah, reset `showDetail` to false, set `isComplete` at end
   - `toggleShow()` — reveal detail (quiz mode), one-way per ayah (resets on next)
   - `restart()` — reset index (re-shuffle if random)
-- [ ] Build `MurojaahView.vue` — main session layout
-- [ ] Build `SessionHeader.vue` — surah name, ayah number, juz, progress counter ("Ayat X dari Y"), tombol "Kembali"
-- [ ] Build `AyahPrompt.vue`:
+- [x] Build `MurojaahView.vue` — main session layout
+- [x] Build `SessionHeader.vue` — surah name, ayah number, juz, progress counter ("Ayat X dari Y"), tombol "Kembali"
+- [x] Build `AyahPrompt.vue`:
   - Quiz mode: show surah/ayah/juz info, optionally 3-word hint
   - Review mode: show full Arabic text + translation
-- [ ] Build `AyahDetail.vue` — full Arabic text + translation (toggled by Show button)
-- [ ] Build `AudioPlayer.vue` — HTML `<audio>` with play/pause, auto-stop on next
-- [ ] Build `SessionComplete.vue` — "Selesai!" + "Ulangi" / "Ganti Setting" buttons
+- [x] Build `AyahDetail.vue` — full Arabic text + translation (toggled by Show button)
+- [x] Build `AudioPlayer.vue` — HTML `<audio>` with play/pause, auto-stop on next
+- [x] Build `SessionComplete.vue` — "Selesai!" + "Ulangi" / "Ganti Setting" buttons
 
 **Files:** `src/composables/useSession.js`, `src/components/MurojaahView.vue`, `src/components/SessionHeader.vue`, `src/components/AyahPrompt.vue`, `src/components/AyahDetail.vue`, `src/components/AudioPlayer.vue`, `src/components/SessionComplete.vue`
 
 ### Phase 4: Polish
 
-- [ ] Mobile-first responsive styling (font sizes, spacing, touch targets)
-- [ ] Arabic text styling (Amiri font, large size, RTL direction, proper line-height)
-- [ ] Keyboard support (arrow right / space for Next, Enter for Show)
-- [ ] Test all 12 config permutations (2 scope x 2 mode x 2 order + hint toggle)
-- [ ] Test edge cases: Al-Fatiha (Bismillah = ayah 1), At-Tawbah (no Bismillah), Al-Baqarah (286 ayahs), Juz 30 (pagination)
+- [x] Mobile-first responsive styling (font sizes, spacing, touch targets)
+- [x] Arabic text styling (Amiri font, large size, RTL direction, proper line-height)
+- [x] Keyboard support (arrow right / space for Next, Enter for Show)
+- [x] Test all 12 config permutations (2 scope x 2 mode x 2 order + hint toggle)
+- [x] Test edge cases: Al-Fatiha (Bismillah = ayah 1), At-Tawbah (no Bismillah), Al-Baqarah (286 ayahs), Juz 30 (pagination)
 
 ## Acceptance Criteria
 
-- [ ] User dapat memilih scope (Juz 1-30 atau Surat 1-114 via searchable dropdown)
-- [ ] User dapat memilih mode (Quiz / Review), urutan (Random / Sequential), dan hint toggle
-- [ ] Quiz mode: tampilkan info surat/ayat/juz, opsional hint 3 kata, tombol Show menampilkan ayat + terjemahan
-- [ ] Review mode: tampilkan ayat Arab + terjemahan langsung
-- [ ] Audio playback dengan play/pause, auto-stop saat Next
-- [ ] Progress counter "Ayat X dari Y" selalu terlihat
-- [ ] Tombol "Kembali" untuk keluar sesi kapan saja
-- [ ] End of session: pesan "Selesai!" + pilihan Ulangi / Ganti Setting
-- [ ] Loading state saat fetch API, error state + retry saat gagal
-- [ ] Bismillah di-strip dari hint ayah 1 (kecuali Al-Fatiha)
-- [ ] Mobile-first responsive layout
-- [ ] Arabic text menggunakan Amiri font, RTL direction
+- [x] User dapat memilih scope (Juz 1-30 atau Surat 1-114 via searchable dropdown)
+- [x] User dapat memilih mode (Quiz / Review), urutan (Random / Sequential), dan hint toggle
+- [x] Quiz mode: tampilkan info surat/ayat/juz, opsional hint 3 kata, tombol Show menampilkan ayat + terjemahan
+- [x] Review mode: tampilkan ayat Arab + terjemahan langsung
+- [x] Audio playback dengan play/pause, auto-stop saat Next
+- [x] Progress counter "Ayat X dari Y" selalu terlihat
+- [x] Tombol "Kembali" untuk keluar sesi kapan saja
+- [x] End of session: pesan "Selesai!" + pilihan Ulangi / Ganti Setting
+- [x] Loading state saat fetch API, error state + retry saat gagal
+- [x] Bismillah di-strip dari hint ayah 1 (kecuali Al-Fatiha)
+- [x] Mobile-first responsive layout
+- [x] Arabic text menggunakan Amiri font, RTL direction
 
 ## Dependencies & Risks
 
