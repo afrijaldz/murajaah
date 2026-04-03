@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-const API_BASE = 'https://api.alquran.cloud/v1'
+const API_BASE = '/api/v1'
 const ARABIC_EDITION = 'ar.alafasy'
 const TRANSLATION_EDITION = 'id.indonesian'
 
