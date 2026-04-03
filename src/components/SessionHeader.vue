@@ -27,7 +27,7 @@ defineEmits(['back'])
     <div class="text-center">
       <p class="text-xs text-[var(--color-text-muted)] mb-1">Juz {{ juz }}</p>
       <p class="font-amiri text-lg">{{ surahName }}</p>
-      <p class="text-sm text-[var(--color-text-muted)]">{{ surahEnglishName }} : {{ numberInSurah }}</p>
+      <p class="text-2xl font-bold">{{ surahEnglishName }} : {{ numberInSurah }}</p>
     </div>
 
     <!-- Progress bar -->
