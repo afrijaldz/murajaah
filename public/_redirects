@@ -1,1 +1,2 @@
 /api/*  https://api.alquran.cloud/:splat  200
+/*      /index.html                        200
