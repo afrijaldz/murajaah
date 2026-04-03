@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import SessionHeader from './SessionHeader.vue'
 import AyahPrompt from './AyahPrompt.vue'
 import AyahDetail from './AyahDetail.vue'
@@ -18,6 +18,22 @@ function handleNext() {
   audioPlayerRef.value?.stop()
   props.session.next()
 }
+
+function handleKeydown(e) {
+  if (props.session.isComplete.value) return
+  if (e.key === 'ArrowRight' || e.key === ' ') {
+    e.preventDefault()
+    handleNext()
+  } else if (e.key === 'Enter') {
+    e.preventDefault()
+    if (props.config.mode === 'quiz' && !props.session.showDetail.value) {
+      props.session.show()
+    }
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeydown))
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>
