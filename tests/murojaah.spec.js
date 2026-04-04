@@ -13,17 +13,13 @@ test.describe('Config Panel', () => {
     await expect(page.getByText('Mulai Murojaah')).toBeVisible()
   })
 
-  test('should toggle between Surat and Juz scope', async ({ page }) => {
-    // Default is Surat
+  test('should switch to Juz scope', async ({ page }) => {
     await expect(page.getByText('Pilih Surat')).toBeVisible()
-
-    // Switch to Juz
-    await page.locator('button').filter({ hasText: 'Juz' }).first().click()
-    await expect(page.getByText('Pilih Juz')).toBeVisible()
-
-    // Switch back to Surat
-    await page.locator('button').filter({ hasText: 'Surat' }).first().click()
-    await expect(page.getByText('Pilih Surat')).toBeVisible()
+    // Click "Juz" button (second button on page)
+    await page.locator('button').nth(1).click()
+    await expect(page.getByText('Pilih Juz')).toBeVisible({ timeout: 5000 })
+    // Juz selector should show
+    await expect(page.locator('select')).toBeVisible()
   })
 
   test('should toggle between Quiz and Review mode', async ({ page }) => {

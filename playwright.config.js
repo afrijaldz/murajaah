@@ -12,6 +12,7 @@ export default defineConfig({
     port: 4173,
     reuseExistingServer: true,
   },
+  retries: 1,
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
   ],

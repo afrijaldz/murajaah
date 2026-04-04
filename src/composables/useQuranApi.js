@@ -4,13 +4,51 @@ const API_BASE = 'https://api.quran.com/api/v4'
 const TRANSLATION_ID = 33 // Indonesian Islamic Affairs Ministry
 const RECITER_ID = 7 // Mishary Alafasy
 const AUDIO_BASE = 'https://verses.quran.com/'
+const CLIENT_ID = import.meta.env.VITE_QURAN_CLIENT_ID || ''
+const CLIENT_SECRET = import.meta.env.VITE_QURAN_CLIENT_SECRET || ''
+const OAUTH_URL = import.meta.env.VITE_QURAN_OAUTH_URL || 'https://oauth2.quran.foundation'
+
+let accessToken = null
+let tokenExpiry = 0
+
+async function getToken() {
+  if (accessToken && Date.now() < tokenExpiry) return accessToken
+  if (!CLIENT_ID || !CLIENT_SECRET) return null
+
+  try {
+    const credentials = btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)
+    const res = await fetch(`${OAUTH_URL}/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials&scope=content',
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    accessToken = data.access_token
+    tokenExpiry = Date.now() + (data.expires_in - 60) * 1000
+    return accessToken
+  } catch {
+    // OAuth might fail due to CORS in browser — continue without auth
+    return null
+  }
+}
+
+function buildHeaders(token) {
+  if (!token) return {}
+  return { 'x-auth-token': token, 'x-client-id': CLIENT_ID }
+}
 
 async function fetchAllPages(url) {
+  const token = await getToken()
+  const headers = buildHeaders(token)
   const allVerses = []
   let page = 1
   while (true) {
     const separator = url.includes('?') ? '&' : '?'
-    const res = await fetch(`${url}${separator}page=${page}&per_page=50`)
+    const res = await fetch(`${url}${separator}page=${page}&per_page=50`, { headers })
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const json = await res.json()
 
@@ -58,7 +96,8 @@ export function useQuranApi() {
 
   async function getChapters() {
     if (chaptersCache.value) return chaptersCache.value
-    const res = await fetch(`${API_BASE}/chapters?language=id`)
+    const token = await getToken()
+    const res = await fetch(`${API_BASE}/chapters?language=id`, { headers: buildHeaders(token) })
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const json = await res.json()
     chaptersCache.value = json.chapters
