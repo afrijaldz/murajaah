@@ -81,8 +81,14 @@ function retry() {
         @change-setting="backToConfig"
       />
 
-      <footer class="text-center mt-8 pb-4">
-        <a href="https://github.com/afrijaldz/murajaah" target="_blank" rel="noopener" class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors">
+      <footer class="text-center mt-8 pb-4 flex items-center justify-center gap-3 text-xs text-[var(--color-text-muted)]">
+        <span>v1</span>
+        <span>&middot;</span>
+        <a href="https://murajaah.afrijal.dev" target="_blank" rel="noopener" class="hover:text-[var(--color-text)] transition-colors">
+          v2
+        </a>
+        <span>&middot;</span>
+        <a href="https://github.com/afrijaldz/murajaah" target="_blank" rel="noopener" class="hover:text-[var(--color-text)] transition-colors">
           GitHub
         </a>
       </footer>
