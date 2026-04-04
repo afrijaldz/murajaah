@@ -2,8 +2,8 @@
 import { ref, watch } from 'vue'
 import { useQuranApi } from '../composables/useQuranApi.js'
 
-const QCF_CDN = 'https://verses.quran.foundation/fonts/quran/hafs/v2/woff2'
-const loadedFonts = new Set()
+const FONT_URL = 'https://verses.quran.foundation/fonts/quran/hafs/uthmanic_hafs/UthmanicHafs1Ver18.woff2'
+let fontLoaded = false
 
 const props = defineProps({
   pageNumber: { type: Number, required: true },
@@ -13,47 +13,37 @@ const props = defineProps({
 const { fetchMushafPage } = useQuranApi()
 const pageData = ref(null)
 const loading = ref(false)
-const fontReady = ref(false)
 const cache = new Map()
 
-async function loadFont(pageNum) {
-  const fontName = `p${pageNum}-v2`
-  if (loadedFonts.has(fontName)) return fontName
+async function loadFont() {
+  if (fontLoaded) return
   try {
-    const fontFace = new FontFace(fontName, `url('${QCF_CDN}/p${pageNum}.woff2')`)
-    fontFace.display = 'block'
+    const fontFace = new FontFace('UthmanicHafs', `url('${FONT_URL}')`)
+    fontFace.display = 'swap'
     await fontFace.load()
     document.fonts.add(fontFace)
-    loadedFonts.add(fontName)
+    fontLoaded = true
   } catch {
-    // Font load failed — will use fallback
+    // Font load failed — will use fallback serif
   }
-  return fontName
 }
 
 async function loadPage(pageNum) {
   if (cache.has(pageNum)) {
     pageData.value = cache.get(pageNum)
-    fontReady.value = loadedFonts.has(`p${pageNum}-v2`)
-    if (!fontReady.value) {
-      await loadFont(pageNum)
-      fontReady.value = true
-    }
     return
   }
   loading.value = true
-  fontReady.value = false
 
   const [data] = await Promise.all([
     fetchMushafPage(pageNum),
-    loadFont(pageNum),
+    loadFont(),
   ])
 
   if (data) {
     cache.set(pageNum, data)
     pageData.value = data
   }
-  fontReady.value = true
   loading.value = false
 }
 
@@ -67,45 +57,94 @@ function isDimmed(verseKey) {
   return props.highlightVerse && verseKey !== props.highlightVerse
 }
 
-function fontFamily(pageNum) {
-  return fontReady.value ? `p${pageNum}-v2` : 'serif'
-}
 </script>
 
 <template>
-  <div class="mushaf-page bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 overflow-hidden">
+  <div class="mushaf-page bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
     <!-- Page number -->
-    <div class="text-center mb-3">
-      <span class="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg)] px-3 py-1 rounded-full">
+    <div class="text-center py-2">
+      <span class="text-xs text-[var(--color-text-muted)]">
         Hal. {{ pageNumber }}
       </span>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-10">
+    <div v-if="loading" class="text-center py-16">
       <div class="inline-block w-6 h-6 border-3 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
     </div>
 
     <!-- Mushaf lines -->
-    <div v-else-if="pageData" class="mushaf-content space-y-0">
+    <div v-else-if="pageData" class="mushaf-content px-3 pb-4">
       <div
-        v-for="line in pageData.lines"
+        v-for="(line, lineIdx) in pageData.lines"
         :key="line.lineNum"
-        class="mushaf-line flex justify-center gap-0 flex-wrap"
+        class="mushaf-line"
+        :class="{ 'mushaf-line-last': lineIdx === pageData.lines.length - 1 && line.words.length <= 3 }"
         dir="rtl"
       >
         <span
           v-for="(word, idx) in line.words"
           :key="idx"
-          class="leading-[2.5] transition-opacity duration-200 inline"
+          class="mushaf-word"
           :class="{
-            'text-[var(--color-primary)]': isHighlighted(word.verseKey),
-            'opacity-20': isDimmed(word.verseKey),
+            'highlighted': isHighlighted(word.verseKey),
+            'dimmed': isDimmed(word.verseKey),
+            'verse-end': word.charType === 'end',
           }"
-          :style="{ fontFamily: word.charType === 'end' ? 'serif' : fontFamily(pageNumber), fontSize: word.charType === 'end' ? '16px' : '28px' }"
-          v-html="word.code"
-        ></span>
+        >{{ word.text }}</span>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.mushaf-content {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.mushaf-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  direction: rtl;
+  line-height: 2.6;
+}
+
+.mushaf-word {
+  font-family: 'UthmanicHafs', 'Amiri', serif;
+  font-size: 26px;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.mushaf-word.highlighted {
+  color: var(--color-primary);
+}
+
+.mushaf-word.dimmed {
+  opacity: 0.15;
+}
+
+.mushaf-word.verse-end {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+.mushaf-line-last {
+  justify-content: center;
+  gap: 24px;
+}
+
+@media (max-width: 480px) {
+  .mushaf-word {
+    font-size: 20px;
+  }
+  .mushaf-word.verse-end {
+    font-size: 14px;
+  }
+  .mushaf-line {
+    line-height: 2.4;
+  }
+}
+</style>
