@@ -160,6 +160,7 @@ export function useQuranApi() {
           const lineNum = word.line_number
           if (!lines.has(lineNum)) lines.set(lineNum, [])
           lines.get(lineNum).push({
+            id: word.id,
             text: word.text_uthmani || word.text,
             verseKey: verse.verse_key,
             charType: word.char_type_name,

@@ -19,13 +19,13 @@ const pageData = ref(null)
 const loading = ref(false)
 const cache = new Map()
 
-// Track which word is the first word of the highlighted verse
-const firstWordPosition = computed(() => {
+// Track the first word of the highlighted verse by unique ID
+const firstWordId = computed(() => {
   if (!pageData.value || !props.highlightVerse) return null
   for (const line of pageData.value.lines) {
     for (const word of line.words) {
       if (word.verseKey === props.highlightVerse && word.charType !== 'end') {
-        return `${line.lineNum}-${word.position}`
+        return word.id
       }
     }
   }
@@ -62,10 +62,9 @@ async function loadPage(pageNum) {
 
 watch(() => props.pageNumber, (val) => loadPage(val), { immediate: true })
 
-function wordClass(word, lineNum) {
+function wordClass(word) {
   const isTarget = word.verseKey === props.highlightVerse
-  const wordId = `${lineNum}-${word.position}`
-  const isFirstWord = wordId === firstWordPosition.value
+  const isFirstWord = word.id === firstWordId.value
 
   if (props.mode === 'hint') {
     // Hint: everything invisible except first word of target verse
@@ -110,7 +109,7 @@ function wordClass(word, lineNum) {
           :key="idx"
           class="mushaf-word"
           :class="[
-            wordClass(word, line.lineNum),
+            wordClass(word),
             { 'verse-end': word.charType === 'end' },
           ]"
         >{{ word.text }}</span>
