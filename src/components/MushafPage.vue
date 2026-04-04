@@ -74,12 +74,11 @@ function isDimmed(verseKey) {
     </div>
 
     <!-- Mushaf lines -->
-    <div v-else-if="pageData" class="mushaf-content px-3 pb-4">
+    <div v-else-if="pageData" class="mushaf-content px-5 pb-5">
       <div
-        v-for="(line, lineIdx) in pageData.lines"
+        v-for="line in pageData.lines"
         :key="line.lineNum"
         class="mushaf-line"
-        :class="{ 'mushaf-line-last': lineIdx === pageData.lines.length - 1 && line.words.length <= 3 }"
         dir="rtl"
       >
         <span
@@ -104,9 +103,7 @@ function isDimmed(verseKey) {
 }
 
 .mushaf-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  text-align: center;
   direction: rtl;
   line-height: 2.6;
 }
@@ -131,10 +128,6 @@ function isDimmed(verseKey) {
   opacity: 0.6;
 }
 
-.mushaf-line-last {
-  justify-content: center;
-  gap: 24px;
-}
 
 @media (max-width: 480px) {
   .mushaf-word {
