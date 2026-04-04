@@ -91,17 +91,15 @@ test.describe('Murojaah Session - Quiz Mode', () => {
     await expect(page.getByText('Lanjut')).toBeVisible()
   })
 
-  test('should show ayah detail when Tampilkan is clicked', async ({ page }) => {
+  test('should reveal mushaf when Tampilkan is clicked', async ({ page }) => {
     await page.goto('/')
     await page.locator('button', { hasText: 'Al-Fatihah' }).waitFor({ timeout: 10000 })
     await page.getByText('Mulai Murojaah').click()
-    await expect(page.getByText('Apa ayat ini?')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Ayat 1 dari 7')).toBeVisible({ timeout: 15000 })
 
-    // Click Tampilkan
+    // Click Tampilkan — Tampilkan button should disappear after click
     await page.getByText('Tampilkan').click()
-
-    // Should show Arabic text and translation
-    await expect(page.locator('[dir="rtl"]')).toBeVisible()
+    await expect(page.getByText('Tampilkan')).toBeHidden()
   })
 
   test('should advance to next ayah', async ({ page }) => {

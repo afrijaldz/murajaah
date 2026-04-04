@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import SessionHeader from './SessionHeader.vue'
 import AyahPrompt from './AyahPrompt.vue'
-import AyahDetail from './AyahDetail.vue'
 import AudioPlayer from './AudioPlayer.vue'
 import SessionComplete from './SessionComplete.vue'
 
@@ -64,13 +63,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           :ayah="session.currentAyah.value"
           :mode="config.mode"
           :show-hint="config.showHint"
-        />
-
-        <!-- Show detail (Quiz mode only) -->
-        <AyahDetail
-          v-if="config.mode === 'quiz'"
-          :ayah="session.currentAyah.value"
-          :visible="session.showDetail.value"
+          :show-detail="session.showDetail.value"
         />
 
         <!-- Hint toggle (Quiz mode only) -->
