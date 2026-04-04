@@ -4,6 +4,7 @@ defineProps({
   surahEnglishName: String,
   numberInSurah: Number,
   juz: Number,
+  page: Number,
   progress: Number,
   total: Number,
 })
@@ -25,7 +26,9 @@ defineEmits(['back'])
     </div>
 
     <div class="text-center">
-      <p class="text-xs text-[var(--color-text-muted)]">Juz {{ juz }}</p>
+      <p class="text-xs text-[var(--color-text-muted)]">
+        Juz {{ juz }}<span v-if="page"> &middot; Hal. {{ page }}</span>
+      </p>
       <p class="font-amiri text-lg mt-3 mb-1">{{ surahName }}</p>
       <p class="text-2xl font-bold">{{ surahEnglishName }} : {{ numberInSurah }}</p>
     </div>

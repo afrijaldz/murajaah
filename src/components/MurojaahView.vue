@@ -53,6 +53,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
         :surah-english-name="session.currentAyah.value.surahEnglishName"
         :number-in-surah="session.currentAyah.value.numberInSurah"
         :juz="session.currentAyah.value.juz"
+        :page="session.currentAyah.value.page"
         :progress="session.progress.value"
         :total="session.total.value"
         @back="$emit('back')"

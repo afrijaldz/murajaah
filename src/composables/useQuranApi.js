@@ -82,6 +82,7 @@ function mapVerses(verses, chapters) {
       audio: v.audio?.url ? `${AUDIO_BASE}${v.audio.url}` : '',
       numberInSurah: ayahNum,
       juz: v.juz_number,
+      page: v.page_number,
       surahNumber: surahNum,
       surahName: chapter?.name_arabic || '',
       surahEnglishName: chapter?.name_simple || '',
@@ -110,7 +111,7 @@ export function useQuranApi() {
 
     try {
       const endpoint = scopeType === 'surah' ? 'by_chapter' : 'by_juz'
-      const url = `${API_BASE}/verses/${endpoint}/${scopeValue}?language=id&translations=${TRANSLATION_ID}&fields=text_uthmani&audio=${RECITER_ID}`
+      const url = `${API_BASE}/verses/${endpoint}/${scopeValue}?language=id&translations=${TRANSLATION_ID}&fields=text_uthmani,page_number&audio=${RECITER_ID}`
 
       const [verses, chapters] = await Promise.all([
         fetchAllPages(url),
@@ -141,5 +142,46 @@ export function useQuranApi() {
     }
   }
 
-  return { fetchAyahs, fetchSurahList, loading, error }
+  async function fetchMushafPage(pageNumber) {
+    try {
+      const token = await getToken()
+      const headers = buildHeaders(token)
+      const res = await fetch(
+        `${API_BASE}/verses/by_page/${pageNumber}?language=id&words=true&translations=${TRANSLATION_ID}&fields=text_uthmani&per_page=50`,
+        { headers }
+      )
+      if (!res.ok) throw new Error(`API error: ${res.status}`)
+      const json = await res.json()
+
+      // Build lines from word data
+      const lines = new Map()
+      for (const verse of json.verses) {
+        for (const word of verse.words || []) {
+          const lineNum = word.line_number
+          if (!lines.has(lineNum)) lines.set(lineNum, [])
+          lines.get(lineNum).push({
+            text: word.text,
+            verseKey: verse.verse_key,
+            charType: word.char_type_name,
+            position: word.position,
+          })
+        }
+      }
+
+      // Convert to sorted array
+      const sortedLines = [...lines.entries()]
+        .sort(([a], [b]) => a - b)
+        .map(([lineNum, words]) => ({ lineNum, words }))
+
+      return {
+        page: pageNumber,
+        lines: sortedLines,
+        verses: json.verses.map(v => v.verse_key),
+      }
+    } catch {
+      return null
+    }
+  }
+
+  return { fetchAyahs, fetchSurahList, fetchMushafPage, loading, error }
 }
