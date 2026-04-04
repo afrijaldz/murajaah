@@ -1,28 +1,59 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useQuranApi } from '../composables/useQuranApi.js'
+
+const QCF_CDN = 'https://verses.quran.foundation/fonts/quran/hafs/v2/woff2'
+const loadedFonts = new Set()
 
 const props = defineProps({
   pageNumber: { type: Number, required: true },
-  highlightVerse: { type: String, default: '' }, // e.g. "2:255"
+  highlightVerse: { type: String, default: '' },
 })
 
 const { fetchMushafPage } = useQuranApi()
 const pageData = ref(null)
 const loading = ref(false)
+const fontReady = ref(false)
 const cache = new Map()
+
+async function loadFont(pageNum) {
+  const fontName = `p${pageNum}-v2`
+  if (loadedFonts.has(fontName)) return fontName
+  try {
+    const fontFace = new FontFace(fontName, `url('${QCF_CDN}/p${pageNum}.woff2')`)
+    fontFace.display = 'block'
+    await fontFace.load()
+    document.fonts.add(fontFace)
+    loadedFonts.add(fontName)
+  } catch {
+    // Font load failed — will use fallback
+  }
+  return fontName
+}
 
 async function loadPage(pageNum) {
   if (cache.has(pageNum)) {
     pageData.value = cache.get(pageNum)
+    fontReady.value = loadedFonts.has(`p${pageNum}-v2`)
+    if (!fontReady.value) {
+      await loadFont(pageNum)
+      fontReady.value = true
+    }
     return
   }
   loading.value = true
-  const data = await fetchMushafPage(pageNum)
+  fontReady.value = false
+
+  const [data] = await Promise.all([
+    fetchMushafPage(pageNum),
+    loadFont(pageNum),
+  ])
+
   if (data) {
     cache.set(pageNum, data)
     pageData.value = data
   }
+  fontReady.value = true
   loading.value = false
 }
 
@@ -34,6 +65,10 @@ function isHighlighted(verseKey) {
 
 function isDimmed(verseKey) {
   return props.highlightVerse && verseKey !== props.highlightVerse
+}
+
+function fontFamily(pageNum) {
+  return fontReady.value ? `p${pageNum}-v2` : 'serif'
 }
 </script>
 
@@ -52,23 +87,24 @@ function isDimmed(verseKey) {
     </div>
 
     <!-- Mushaf lines -->
-    <div v-else-if="pageData" class="mushaf-content space-y-1">
+    <div v-else-if="pageData" class="mushaf-content space-y-0">
       <div
         v-for="line in pageData.lines"
         :key="line.lineNum"
-        class="mushaf-line flex justify-center gap-[3px] flex-wrap"
+        class="mushaf-line flex justify-center gap-0 flex-wrap"
         dir="rtl"
       >
         <span
           v-for="(word, idx) in line.words"
           :key="idx"
-          class="font-amiri text-xl leading-[2.2] transition-opacity duration-200"
+          class="leading-[2.5] transition-opacity duration-200 inline"
           :class="{
-            'text-[var(--color-primary)] font-bold': isHighlighted(word.verseKey),
-            'opacity-25': isDimmed(word.verseKey),
-            'text-[var(--color-accent)] text-sm align-super': word.charType === 'end',
+            'text-[var(--color-primary)]': isHighlighted(word.verseKey),
+            'opacity-20': isDimmed(word.verseKey),
           }"
-        >{{ word.text }}</span>
+          :style="{ fontFamily: word.charType === 'end' ? 'serif' : fontFamily(pageNumber), fontSize: word.charType === 'end' ? '16px' : '28px' }"
+          v-html="word.code"
+        ></span>
       </div>
     </div>
   </div>

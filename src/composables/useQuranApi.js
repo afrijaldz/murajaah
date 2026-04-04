@@ -147,7 +147,7 @@ export function useQuranApi() {
       const token = await getToken()
       const headers = buildHeaders(token)
       const res = await fetch(
-        `${API_BASE}/verses/by_page/${pageNumber}?language=id&words=true&translations=${TRANSLATION_ID}&fields=text_uthmani&per_page=50`,
+        `${API_BASE}/verses/by_page/${pageNumber}?language=id&words=true&word_fields=code_v2,text_uthmani&translations=${TRANSLATION_ID}&fields=text_uthmani&mushaf=1&per_page=50`,
         { headers }
       )
       if (!res.ok) throw new Error(`API error: ${res.status}`)
@@ -160,7 +160,7 @@ export function useQuranApi() {
           const lineNum = word.line_number
           if (!lines.has(lineNum)) lines.set(lineNum, [])
           lines.get(lineNum).push({
-            text: word.text,
+            code: word.code_v2 || word.text,
             verseKey: verse.verse_key,
             charType: word.char_type_name,
             position: word.position,
