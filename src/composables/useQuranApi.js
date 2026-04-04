@@ -1,77 +1,84 @@
 import { ref } from 'vue'
 
-const API_BASE = '/api/v1'
-const ARABIC_EDITION = 'ar.alafasy'
-const TRANSLATION_EDITION = 'id.indonesian'
+const API_BASE = 'https://api.quran.com/api/v4'
+const TRANSLATION_ID = 33 // Indonesian Islamic Affairs Ministry
+const RECITER_ID = 7 // Mishary Alafasy
+const AUDIO_BASE = 'https://verses.quran.com/'
 
-async function fetchAllPages(endpoint) {
-  const allAyahs = []
-  let surahMeta = null
-  let offset = 0
+async function fetchAllPages(url) {
+  const allVerses = []
+  let page = 1
   while (true) {
-    const url = `${API_BASE}${endpoint}${endpoint.includes('?') ? '&' : '?'}offset=${offset}`
-    const res = await fetch(url)
+    const separator = url.includes('?') ? '&' : '?'
+    const res = await fetch(`${url}${separator}page=${page}&per_page=50`)
     if (!res.ok) throw new Error(`API error: ${res.status}`)
     const json = await res.json()
-    const data = json.data
 
-    // Surah endpoint has metadata at top level, not per ayah
-    if (!surahMeta && data.number && data.name && !data.ayahs?.[0]?.surah) {
-      surahMeta = { number: data.number, name: data.name, englishName: data.englishName }
-    }
+    const verses = json.verses
+    if (!verses || verses.length === 0) break
+    allVerses.push(...verses)
 
-    const ayahs = data.ayahs
-    if (!ayahs || ayahs.length === 0) break
-
-    // Inject surah metadata into each ayah if not present
-    if (surahMeta) {
-      for (const ayah of ayahs) {
-        if (!ayah.surah) ayah.surah = surahMeta
-      }
-    }
-
-    allAyahs.push(...ayahs)
-    if (ayahs.length < 128) break
-    offset += ayahs.length
+    if (!json.pagination || page >= json.pagination.total_pages) break
+    page++
   }
-  return allAyahs
+  return allVerses
 }
 
-function mergeAyahs(arabicAyahs, translationAyahs) {
-  const translationMap = new Map()
-  for (const ayah of translationAyahs) {
-    translationMap.set(ayah.number, ayah.text)
+function mapVerses(verses, chapters) {
+  const chapterMap = new Map()
+  if (chapters) {
+    for (const ch of chapters) {
+      chapterMap.set(ch.id, ch)
+    }
   }
 
-  return arabicAyahs.map(ayah => ({
-    number: ayah.number,
-    arabic: ayah.text,
-    translation: translationMap.get(ayah.number) || '',
-    audio: ayah.audio,
-    numberInSurah: ayah.numberInSurah,
-    juz: ayah.juz,
-    surahNumber: ayah.surah?.number || ayah.surah,
-    surahName: ayah.surah?.name || '',
-    surahEnglishName: ayah.surah?.englishName || '',
-  }))
+  return verses.map(v => {
+    const [surahNum, ayahNum] = v.verse_key.split(':').map(Number)
+    const chapter = chapterMap.get(surahNum)
+    const translation = v.translations?.[0]?.text || ''
+
+    return {
+      number: v.id,
+      arabic: v.text_uthmani,
+      translation: translation.replace(/<[^>]*>/g, ''),
+      audio: v.audio?.url ? `${AUDIO_BASE}${v.audio.url}` : '',
+      numberInSurah: ayahNum,
+      juz: v.juz_number,
+      surahNumber: surahNum,
+      surahName: chapter?.name_arabic || '',
+      surahEnglishName: chapter?.name_simple || '',
+    }
+  })
 }
 
 export function useQuranApi() {
   const loading = ref(false)
   const error = ref(null)
+  const chaptersCache = ref(null)
+
+  async function getChapters() {
+    if (chaptersCache.value) return chaptersCache.value
+    const res = await fetch(`${API_BASE}/chapters?language=id`)
+    if (!res.ok) throw new Error(`API error: ${res.status}`)
+    const json = await res.json()
+    chaptersCache.value = json.chapters
+    return json.chapters
+  }
 
   async function fetchAyahs(scopeType, scopeValue) {
     loading.value = true
     error.value = null
 
     try {
-      const endpoint = scopeType === 'surah' ? '/surah' : '/juz'
-      const [arabicAyahs, translationAyahs] = await Promise.all([
-        fetchAllPages(`${endpoint}/${scopeValue}/${ARABIC_EDITION}`),
-        fetchAllPages(`${endpoint}/${scopeValue}/${TRANSLATION_EDITION}`),
+      const endpoint = scopeType === 'surah' ? 'by_chapter' : 'by_juz'
+      const url = `${API_BASE}/verses/${endpoint}/${scopeValue}?language=id&translations=${TRANSLATION_ID}&fields=text_uthmani&audio=${RECITER_ID}`
+
+      const [verses, chapters] = await Promise.all([
+        fetchAllPages(url),
+        getChapters(),
       ])
 
-      return mergeAyahs(arabicAyahs, translationAyahs)
+      return mapVerses(verses, chapters)
     } catch (err) {
       error.value = err.message || 'Gagal memuat ayat. Periksa koneksi internet.'
       return null
@@ -82,15 +89,13 @@ export function useQuranApi() {
 
   async function fetchSurahList() {
     try {
-      const res = await fetch(`${API_BASE}/surah`)
-      if (!res.ok) throw new Error(`API error: ${res.status}`)
-      const json = await res.json()
-      return json.data.map(s => ({
-        number: s.number,
-        name: s.name,
-        englishName: s.englishName,
-        englishNameTranslation: s.englishNameTranslation,
-        numberOfAyahs: s.numberOfAyahs,
+      const chapters = await getChapters()
+      return chapters.map(ch => ({
+        number: ch.id,
+        name: ch.name_arabic,
+        englishName: ch.name_simple,
+        englishNameTranslation: ch.translated_name?.name || '',
+        numberOfAyahs: ch.verses_count,
       }))
     } catch {
       return null
