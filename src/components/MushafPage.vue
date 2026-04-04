@@ -75,9 +75,9 @@ function wordClass(word, lineNum) {
   }
 
   if (props.mode === 'reveal') {
-    // Reveal: all text visible, target verse highlighted
-    if (isTarget) return 'highlighted'
-    return ''
+    // Reveal: target verse normal color, others dimmed
+    if (isTarget) return 'reveal-target'
+    return 'dimmed'
   }
 
   // Full: all visible, target highlighted
@@ -157,10 +157,18 @@ function wordClass(word, lineNum) {
   font-weight: bold;
 }
 
-/* Reveal / Full mode: highlighted verse */
+/* Reveal mode: target verse stands out, others dimmed */
+.mushaf-word.reveal-target {
+  color: var(--color-primary);
+}
+
+.mushaf-word.dimmed {
+  opacity: 0.2;
+}
+
+/* Full / Review mode: highlighted verse */
 .mushaf-word.highlighted {
   color: var(--color-primary);
-  font-weight: bold;
 }
 
 .mushaf-word.verse-end {
